@@ -40,27 +40,40 @@ class VERSION_PT_panel(bpy.types.Panel):
 class MyAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
+    # Enable auto-check for updates by default
     auto_check_update: bpy.props.BoolProperty(
         name="Auto-check for Update",
         description="Automatically check for updates",
-        default=False
+        default=True
     )
+
+    # Check for updates as often as possible
     updater_interval_months: bpy.props.IntProperty(
-        name='Months', default=0, min=0, max=120
+        name='Months',
+        default=0,
+        min=0, max=120
     )
     updater_interval_days: bpy.props.IntProperty(
-        name='Days', default=7, min=0, max=31
+        name='Days',
+        default=0,
+        min=0, max=31
     )
     updater_interval_hours: bpy.props.IntProperty(
-        name='Hours', default=0, min=0, max=23
+        name='Hours',
+        default=0,
+        min=0, max=23
     )
     updater_interval_minutes: bpy.props.IntProperty(
-        name='Minutes', default=0, min=0, max=59
+        name='Minutes',
+        default=1,  # minimum practical interval
+        min=0, max=59
     )
 
     def draw(self, context):
         layout = self.layout
+        layout.label(text="Update Settings (Aggressive Mode)")
         addon_updater_ops.update_settings_ui(self, context)
+
 
 
 # Register
