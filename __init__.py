@@ -2,7 +2,7 @@ bl_info = {
     "name": "Version Display Addon",
     "author": "Your Name",
     "version": (1, 0, 0),
-    "blender": (3, 0, 0),
+    "blender": (4, 5, 0),
     "location": "View3D > Sidebar > Version Tab",
     "description": "Shows current addon version in the UI",
     "category": "3D View"
@@ -36,6 +36,7 @@ class VERSION_PT_panel(bpy.types.Panel):
         version_str = ".".join(map(str, bl_info["version"]))
         layout.label(text=f"Current Version: {version_str}")
         layout.operator("wm.show_addon_version")
+        addon_updater_ops.update_notice_box_ui(self, context)
 
 class MyAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
@@ -74,7 +75,10 @@ class MyAddonPreferences(bpy.types.AddonPreferences):
         layout.label(text="Update Settings (Aggressive Mode)")
         addon_updater_ops.update_settings_ui(self, context)
 
-
+def check_update_on_startup():
+    # Force a check on startup only
+    addon_updater_ops.check_for_update_now()
+    return None  # Don't repeat
 
 # Register
 classes = (VERSION_OT_show_version, VERSION_PT_panel, MyAddonPreferences)
@@ -83,13 +87,11 @@ def register():
     addon_updater_ops.register(bl_info)
     for cls in classes:
         bpy.utils.register_class(cls)
-    addon_updater_ops.updater.auto_install = True
-    addon_updater_ops.updater.check_interval_enable = True
-    addon_updater_ops.updater.interval_months = 0
-    addon_updater_ops.updater.interval_days = 0
-    addon_updater_ops.updater.interval_hours = 0
-    addon_updater_ops.updater.interval_minutes = 1
 
+    addon_updater_ops.updater.auto_install = True
+    addon_updater_ops.updater.check_interval_enable = False
+    
+    bpy.app.timers.register(check_update_on_startup, first_interval=2.0, persistent=False)
 def unregister():
     addon_updater_ops.unregister()
     for cls in reversed(classes):
