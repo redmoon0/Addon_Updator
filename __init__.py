@@ -83,6 +83,12 @@ def register():
     addon_updater_ops.register(bl_info)
     for cls in classes:
         bpy.utils.register_class(cls)
+    addon_updater_ops.updater.auto_install = True
+    addon_updater_ops.updater.check_interval_enable = True
+    addon_updater_ops.updater.interval_months = 0
+    addon_updater_ops.updater.interval_days = 0
+    addon_updater_ops.updater.interval_hours = 0
+    addon_updater_ops.updater.interval_minutes = 1
 
 def unregister():
     addon_updater_ops.unregister()
