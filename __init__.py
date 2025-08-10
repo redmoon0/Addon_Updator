@@ -1,79 +1,80 @@
 bl_info = {
-    "name": "My Addon with Update Checker",
+    "name": "Version Display Addon",
     "author": "Your Name",
-    "version": (1, 0, 0.1),
-    "blender": (2, 80, 0),
-    "description": "Example addon with GitHub update checker.",
-    "category": "System",
+    "version": (1, 0, 0),
+    "blender": (3, 0, 0),
+    "location": "View3D > Sidebar > Version Tab",
+    "description": "Shows current addon version in the UI",
+    "category": "3D View"
 }
 
 import bpy
-from . import addon_updater  # Import our updater module
+from . import addon_updater_ops
 
-
-class UPDATECHECKER_OT_check(bpy.types.Operator):
-    bl_idname = "updatechecker.check"
-    bl_label = "Check for Updates"
+# Operator to show version
+class VERSION_OT_show_version(bpy.types.Operator):
+    bl_idname = "wm.show_addon_version"
+    bl_label = "Show Version"
+    bl_description = "Print the current addon version"
 
     def execute(self, context):
-        current_version = bl_info["version"]
-        latest_version = addon_updater1.get_latest_version(
-            owner="YOUR_GITHUB_USERNAME",
-            repo="YOUR_REPO_NAME",
-            use_releases=True,
-            token=context.preferences.addons[__name__].preferences.github_token
-        )
-
-        if not latest_version:
-            self.report({'ERROR'}, "Could not fetch latest version.")
-            return {'CANCELLED'}
-
-        if addon_updater1.is_newer_version(current_version, latest_version):
-            self.report({'INFO'}, f"Update available: {latest_version}")
-        else:
-            self.report({'INFO'}, "You are using the latest version.")
-
+        version_str = ".".join(map(str, bl_info["version"]))
+        self.report({'INFO'}, f"Addon Version: {version_str}")
+        print(f"Addon Version: {version_str}")
         return {'FINISHED'}
 
+# UI Panel
+class VERSION_PT_panel(bpy.types.Panel):
+    bl_label = "Addon Version"
+    bl_idname = "VERSION_PT_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Version"
 
-class UPDATECHECKER_Preferences(bpy.types.AddonPreferences):
-    bl_idname = __name__
-    github_token: bpy.props.StringProperty(
-        name="GitHub Token",
-        description="GitHub personal access token for private repos",
-        subtype='PASSWORD',
-        default=""
+    def draw(self, context):
+        layout = self.layout
+        version_str = ".".join(map(str, bl_info["version"]))
+        layout.label(text=f"Current Version: {version_str}")
+        layout.operator("wm.show_addon_version")
+
+class MyAddonPreferences(bpy.types.AddonPreferences):
+    bl_idname = __package__
+
+    auto_check_update: bpy.props.BoolProperty(
+        name="Auto-check for Update",
+        description="Automatically check for updates",
+        default=False
+    )
+    updater_interval_months: bpy.props.IntProperty(
+        name='Months', default=0, min=0, max=120
+    )
+    updater_interval_days: bpy.props.IntProperty(
+        name='Days', default=7, min=0, max=31
+    )
+    updater_interval_hours: bpy.props.IntProperty(
+        name='Hours', default=0, min=0, max=23
+    )
+    updater_interval_minutes: bpy.props.IntProperty(
+        name='Minutes', default=0, min=0, max=59
     )
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "github_token")
+        addon_updater_ops.update_settings_ui(self, context)
 
 
-class UPDATECHECKER_PT_panel(bpy.types.Panel):
-    bl_label = "Update Checker"
-    bl_idname = "UPDATECHECKER_PT_panel"
-    bl_space_type = "PREFERENCES"
-    bl_region_type = "WINDOW"
-    bl_context = "addons"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator("updatechecker.check", icon="FILE_REFRESH")
-
-
-classes = (
-    UPDATECHECKER_OT_check,
-    UPDATECHECKER_Preferences,
-    UPDATECHECKER_PT_panel,
-)
-
+# Register
+classes = (VERSION_OT_show_version, VERSION_PT_panel, MyAddonPreferences)
 
 def register():
+    addon_updater_ops.register(bl_info)
     for cls in classes:
         bpy.utils.register_class(cls)
 
-
 def unregister():
+    addon_updater_ops.unregister()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+if __name__ == "__main__":
+    register()
