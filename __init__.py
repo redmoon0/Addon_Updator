@@ -1,7 +1,7 @@
 bl_info = {
     "name": "My Addon with Update Checker",
     "author": "Your Name",
-    "version": (1, 0, 0),
+    "version": (1, 0, 0.1),
     "blender": (2, 80, 0),
     "description": "Example addon with GitHub update checker.",
     "category": "System",
